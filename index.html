@@ -63,6 +63,7 @@ body{font-family:'Barlow',sans-serif;background:#f0f2f0;color:var(--k);font-size
 .btn-sm{padding:4px 9px;font-size:10px}
 .btn-lg{padding:10px 20px;font-size:13px}
 .btn-del{background:#fde;color:var(--r);border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;font-weight:700}
+.btn-edit{background:#e8f4fd;color:#0f4c75;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;margin-right:3px}
 .viewer-mode .no-print{display:none!important}
 .viewer-mode input.fc,.viewer-mode select.fc,.viewer-mode input.iq{pointer-events:none;opacity:.7}
 .btn-edit{background:#e8f0fe;color:var(--b);border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;font-weight:700}
@@ -325,9 +326,6 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
   <div class="htit">Liquidador Nokia 2026</div>
   <div class="flex gap8" style="align-items:center">
     <span id="hdr-user-badge" class="user-badge ub-op" onclick="doLogout()">👤 Operador ▸ Salir</span>
-    <button class="btn bp btn-sm no-print" onclick="openModal('m-nuevo-sitio')">＋ Sitio</button>
-    <button class="btn bo btn-sm no-print" onclick="openModal('m-nuevo-tss')">＋ TSS</button>
-    <button class="btn bk btn-sm no-print" onclick="exportarExcel()">⬇ Excel</button>
   </div>
 </div>
 
@@ -818,6 +816,29 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     <div class="mf">
       <button class="btn bou" onclick="closeModal('m-gastos')">Cancelar</button>
       <button class="btn bd" onclick="agregarGasto()">✓ Guardar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR GASTO -->
+<div class="mo" id="m-edit-gasto">
+  <div class="modal" style="max-width:420px">
+    <div class="mh"><h3>✏ Editar Gasto</h3><button class="mc" onclick="closeModal('m-edit-gasto')">×</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Tipo</label>
+        <select class="fc" id="eg-tipo">
+          <option value="Materiales TI">Materiales TI</option>
+          <option value="Materiales CW">Materiales CW</option>
+          <option value="Logistica">Logística</option>
+          <option value="Adicionales">Adicionales</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Descripción</label><input type="text" class="fc" id="eg-desc"></div>
+      <div class="fg"><label class="fl">Valor (COP)</label><input type="number" class="fc" id="eg-valor" min="0"></div>
+    </div>
+    <div class="mf">
+      <button class="btn bou" onclick="closeModal('m-edit-gasto')">Cancelar</button>
+      <button class="btn bp" onclick="guardarEditGasto()">✓ Guardar</button>
     </div>
   </div>
 </div>
@@ -1747,7 +1768,10 @@ function renderLiqSitio(sitio){
     const gi=ST.gastos.indexOf(g);
     return`<tr><td><span class="badge bg-o" style="font-size:9px">${g.tipo}</span></td>
       <td style="font-size:10px">${g.desc}</td><td class="num">${cop(g.valor)}</td>
-      <td><button class="btn-del" onclick="eliminarGasto(${gi});cargarSitio('${sitio.id}')">✕</button></td></tr>`;
+      <td style="white-space:nowrap">
+        <button class="btn-edit" onclick="editarGasto(${gi},'${sitio.id}')" title="Editar">✏</button>
+        <button class="btn-del" onclick="eliminarGasto(${gi});cargarSitio('${sitio.id}')">✕</button>
+      </td></tr>`;
   }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:10px;font-size:10px">Sin gastos</td></tr>';
 
   const costoPanel=`
@@ -2745,6 +2769,28 @@ function agregarGasto(){
   }
 }
 function eliminarGasto(i){ST.gastos.splice(i,1);saveState();renderGastos();toast('Gasto eliminado')}
+
+let _editGastoIdx=null, _editGastoSitioId=null;
+function editarGasto(i, sitioId){
+  const g=ST.gastos[i];if(!g)return;
+  _editGastoIdx=i; _editGastoSitioId=sitioId;
+  document.getElementById('eg-tipo').value=g.tipo;
+  document.getElementById('eg-desc').value=g.desc;
+  document.getElementById('eg-valor').value=g.valor;
+  openModal('m-edit-gasto');
+}
+function guardarEditGasto(){
+  const tipo=document.getElementById('eg-tipo').value;
+  const desc=document.getElementById('eg-desc').value.trim();
+  const valor=parseFloat(document.getElementById('eg-valor').value)||0;
+  if(!desc){toast('La descripción es requerida','err');return;}
+  ST.gastos[_editGastoIdx]={...ST.gastos[_editGastoIdx],tipo,desc,valor};
+  saveState();
+  closeModal('m-edit-gasto');
+  renderGastos();
+  if(_editGastoSitioId)cargarSitio(_editGastoSitioId);
+  toast('Gasto actualizado');
+}
 function openGastoFor(id){
   document.getElementById('g-sitio').innerHTML=ST.sitios.map(s=>`<option value="${s.id}" ${s.id===id?'selected':''}>${s.id}</option>`).join('');
   openModal('m-gastos');
