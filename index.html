@@ -1628,7 +1628,8 @@ function abrirLiquidador(id){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
   document.getElementById('screen-liquidador').classList.add('active');
-  document.querySelectorAll('.nt')[2].classList.add('active');
+  const navLiq=[...document.querySelectorAll('.nt')].find(b=>b.textContent.trim()==='Liquidador');
+  if(navLiq)navLiq.classList.add('active');
   initSelLiq();
   document.getElementById('sel-liq').value=id;
   cargarSitio(id);
