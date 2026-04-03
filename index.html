@@ -661,12 +661,15 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 
   <!-- CATÁLOGO CW -->
   <div class="sec-div" style="display:flex;justify-content:space-between;align-items:center;margin-top:20px">
-    CATÁLOGO CW — Obra Civil (106 ítems)
+    CATÁLOGO CW — Obra Civil
     <div class="flex gap8">
       <select class="fc" id="cat-cw-zona" style="width:150px;font-size:10px" onchange="renderCatalogoCW()">
         <option value="URBANO">Precios URBANO</option>
         <option value="RURAL">Precios RURAL</option>
       </select>
+      <input type="file" id="file-cat-cw-upload" accept=".csv,.xlsx,.xls" style="display:none" onchange="importarPreciosCW(this)">
+      <button id="btn-cat-cw-upload" class="btn btn-sm" style="display:none;border-radius:20px;padding:6px 16px" onclick="document.getElementById('file-cat-cw-upload').click()">📥 Cargar Precios</button>
+      <button id="btn-cw-add" class="btn btn-sm" style="display:none;border-radius:20px;padding:6px 16px;background:#144E4A;color:#CDFBF2" onclick="addCatRowCW()">＋ Ítem</button>
       <button id="btn-cw-save" class="btn btn-sm" style="display:none;background:#144E4A;color:#CDFBF2;font-weight:700;border-radius:20px;padding:6px 16px" onclick="guardarCatalogoCW()">💾 Guardar CW</button>
     </div>
   </div>
@@ -871,6 +874,30 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     <div class="mf">
       <button class="btn bou" onclick="closeModal('m-add-cw-item')">Cancelar</button>
       <button class="btn bp" style="background:#0f4c75" onclick="confirmarAddCWItem()">＋ Agregar</button>
+    </div>
+  </div>
+</div>
+
+<!-- EDITAR ÍTEM CW -->
+<div class="mo" id="m-edit-cw-item">
+  <div class="modal" style="max-width:520px">
+    <div class="mh" style="background:#0f4c75;border-bottom-color:#48cae4">
+      <h3 style="color:#fff">✏ Editar Ítem CW</h3>
+      <button class="mc" onclick="closeModal('m-edit-cw-item')">×</button>
+    </div>
+    <div class="mb">
+      <div class="fg">
+        <label class="fl">Ítem / Actividad CW</label>
+        <select class="fc" id="ea-cw-act" style="font-size:11px"></select>
+      </div>
+      <div class="fg">
+        <label class="fl">Cantidad</label>
+        <input type="number" class="fc" id="ea-cw-cant" min="0" step="any">
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bou" onclick="closeModal('m-edit-cw-item')">Cancelar</button>
+      <button class="btn bp" style="background:#0f4c75" onclick="confirmarEditCWItem()">✓ Guardar</button>
     </div>
   </div>
 </div>
@@ -3602,6 +3629,7 @@ function cargarLiqCW(sitioId){
 
 function _updLiqCWTipoZona(sitioId,tipo){
   const liq=getLiqCW(sitioId);if(!liq)return;
+  if(liq.estado==='final')return; // precios congelados en liquidación final
   liq.tipo_zona=tipo;
   // Actualizar precios en items ya agregados según nuevo tipo_zona
   const esRural=tipo==='RURAL';
@@ -3744,7 +3772,7 @@ function renderLiquidadorCWSitio(sitio,liq){
       }</td>
       <td class="num">${cop(item.precio_nokia)}</td>
       <td class="num fw7" id="cw-rn-${sitio.id}-${safeId}">${cop(totN)}</td>
-      <td class="no-print">${locked?'':`<button class="btn-del" onclick="delCWItem('${sitio.id}','${item.actividad_id}')">✕</button>`}</td>
+      <td class="no-print">${locked?'':`<button class="btn-edit" style="margin-right:3px" onclick="editCWItem('${sitio.id}','${item.actividad_id}')">✏</button><button class="btn-del" onclick="delCWItem('${sitio.id}','${item.actividad_id}')">✕</button>`}</td>
     </tr>`;
   }).join('');
 
@@ -3952,28 +3980,69 @@ function delCWItem(sitioId,actId){
   const sitio=ST.sitios.find(s=>s.id===sitioId);
   if(sitio)renderLiquidadorCWSitio(sitio,liq);
 }
+let _editCWSitioId=null, _editCWActId=null;
+function editCWItem(sitioId,actId){
+  _editCWSitioId=sitioId; _editCWActId=actId;
+  const liq=getLiqCW(sitioId);if(!liq)return;
+  const item=liq.items.find(i=>i.actividad_id===actId);if(!item)return;
+  document.getElementById('ea-cw-act').innerHTML=CAT_CW.map(c=>
+    `<option value="${c.actividad_id}" ${c.actividad_id===actId?'selected':''}>${c.actividad_id} — ${c.nombre}</option>`
+  ).join('');
+  document.getElementById('ea-cw-cant').value=item.cant||0;
+  openModal('m-edit-cw-item');
+}
+function confirmarEditCWItem(){
+  const liq=getLiqCW(_editCWSitioId);if(!liq)return;
+  const idx=liq.items.findIndex(i=>i.actividad_id===_editCWActId);if(idx<0)return;
+  const newActId=document.getElementById('ea-cw-act').value;
+  const newCant=parseFloat(document.getElementById('ea-cw-cant').value)||0;
+  const cat=CAT_CW.find(c=>c.actividad_id===newActId);if(!cat)return;
+  const esRural=liq.tipo_zona==='RURAL';
+  liq.items[idx]={
+    actividad_id:cat.actividad_id, nombre:cat.nombre, unidad:cat.unidad, cant:newCant,
+    precio_nokia:esRural?cat.precio_nokia_rural:cat.precio_nokia_urbano,
+    precio_subc:esRural?cat.precio_subc_rural:cat.precio_subc_urbano
+  };
+  saveLiqCWLocal(liq);
+  closeModal('m-edit-cw-item');
+  const sitio=ST.sitios.find(s=>s.id===_editCWSitioId);
+  if(sitio)renderLiquidadorCWSitio(sitio,liq);
+  toast('Ítem CW actualizado');
+}
 
 // ── Catálogo CW ──────────────────────────────────────────────
 function renderCatalogoCW(){
   const tbody=document.getElementById('tbody-cat-cw');
   if(!tbody)return;
-  const btnSave=document.getElementById('btn-cw-save');
-  if(btnSave)btnSave.style.display=ST.isAdmin?'':'none';
+  ['btn-cw-save','btn-cat-cw-upload','btn-cw-add'].forEach(id=>{
+    const b=document.getElementById(id);if(b)b.style.display=ST.isAdmin?'':'none';
+  });
   if(!CAT_CW.length){
-    tbody.innerHTML='<tr><td colspan="5" style="padding:20px;text-align:center;color:var(--g3)">Catálogo CW no cargado — verifica la tabla catalogo_cw en Supabase</td></tr>';
+    tbody.innerHTML='<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--g3)">Catálogo CW no cargado — verifica la tabla catalogo_cw en Supabase</td></tr>';
     return;
   }
   const esRural=(document.getElementById('cat-cw-zona')?.value)==='RURAL';
+  const inpStyle='width:100%;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;box-sizing:border-box';
+  const inpNum='width:110px;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;text-align:right';
+  const editId=(c)=>ST.isAdmin
+    ?`<input type="text" style="${inpStyle};font-weight:700;color:var(--b)" value="${c.actividad_id}" onchange="updCatCWField('${c.actividad_id}','actividad_id',this.value)">`
+    :`<span style="font-weight:700;color:var(--b)">${c.actividad_id}</span>`;
+  const editNom=(c)=>ST.isAdmin
+    ?`<input type="text" style="${inpStyle}" value="${c.nombre}" onchange="updCatCWField('${c.actividad_id}','nombre',this.value)">`
+    :c.nombre;
+  const editUnd=(c)=>ST.isAdmin
+    ?`<input type="text" style="${inpStyle}" value="${c.unidad}" onchange="updCatCWField('${c.actividad_id}','unidad',this.value)">`
+    :`<span class="badge bg-k" style="font-size:8px">${c.unidad}</span>`;
   const editN=(c)=>ST.isAdmin
-    ?`<input type="number" style="width:110px;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;text-align:right" value="${esRural?c.precio_nokia_rural:c.precio_nokia_urbano}" onchange="updCatCWPrice('${c.actividad_id}','nokia',${esRural?1:0},this.value)">`
+    ?`<input type="number" style="${inpNum}" value="${esRural?c.precio_nokia_rural:c.precio_nokia_urbano}" onchange="updCatCWPrice('${c.actividad_id}','nokia',${esRural?1:0},this.value)">`
     :cop(esRural?c.precio_nokia_rural:c.precio_nokia_urbano);
   const editS=(c)=>ST.isAdmin
-    ?`<input type="number" style="width:110px;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;text-align:right" value="${esRural?c.precio_subc_rural:c.precio_subc_urbano}" onchange="updCatCWPrice('${c.actividad_id}','subc',${esRural?1:0},this.value)">`
+    ?`<input type="number" style="${inpNum}" value="${esRural?c.precio_subc_rural:c.precio_subc_urbano}" onchange="updCatCWPrice('${c.actividad_id}','subc',${esRural?1:0},this.value)">`
     :cop(esRural?c.precio_subc_rural:c.precio_subc_urbano);
   tbody.innerHTML=CAT_CW.map(c=>`<tr>
-    <td style="white-space:nowrap;font-weight:700;color:var(--b)">${c.actividad_id}</td>
-    <td style="font-size:10px">${c.nombre}</td>
-    <td><span class="badge bg-k" style="font-size:8px">${c.unidad}</span></td>
+    <td style="min-width:100px">${editId(c)}</td>
+    <td style="font-size:10px;min-width:200px">${editNom(c)}</td>
+    <td style="min-width:80px">${editUnd(c)}</td>
     <td class="num" style="background:#eff6ff">${editN(c)}</td>
     <td class="num" style="background:#fffbeb">${editS(c)}</td>
   </tr>`).join('');
@@ -3984,6 +4053,54 @@ function updCatCWPrice(actId, campo, esRural, val){
   const v=parseInt(val)||0;
   if(campo==='nokia') esRural?c.precio_nokia_rural=v:c.precio_nokia_urbano=v;
   else                esRural?c.precio_subc_rural=v:c.precio_subc_urbano=v;
+}
+function updCatCWField(actId, campo, val){
+  const c=CAT_CW.find(x=>x.actividad_id===actId);if(!c)return;
+  if(campo==='actividad_id') c.actividad_id=val.trim();
+  else if(campo==='nombre')  c.nombre=val.trim();
+  else if(campo==='unidad')  c.unidad=val.trim();
+}
+function addCatRowCW(){
+  CAT_CW.push({
+    actividad_id:'CW_NUEVO_'+Date.now(), nombre:'Nueva Actividad CW', unidad:'Sitio',
+    tipo_zona:'URBANO',
+    precio_nokia_urbano:0, precio_subc_urbano:0,
+    precio_nokia_rural:0,  precio_subc_rural:0
+  });
+  renderCatalogoCW();
+  toast('Ítem CW agregado — edita nombre/ID y guarda');
+}
+async function importarPreciosCW(input){
+  const file=input.files[0];if(!file)return;
+  input.value='';
+  const ext=file.name.split('.').pop().toLowerCase();
+  if(ext==='csv'){
+    _procesarCSVPreciosCW(await file.text());
+  } else if(ext==='xlsx'||ext==='xls'){
+    if(typeof XLSX==='undefined'){toast('Usa CSV por ahora.','err');return;}
+    const buf=await file.arrayBuffer();
+    const wb=XLSX.read(buf);
+    _procesarCSVPreciosCW(XLSX.utils.sheet_to_csv(wb.Sheets[wb.SheetNames[0]]));
+  } else { toast('Formato no soportado. Usa CSV o Excel.','err'); }
+}
+function _procesarCSVPreciosCW(text){
+  // Columnas esperadas: actividad_id, tipo_zona (URBANO/RURAL), precio_nokia, precio_subc
+  const lines=text.trim().split('\n');
+  let updated=0, errors=0;
+  for(let i=1;i<lines.length;i++){
+    const cols=lines[i].split(',').map(c=>c.trim().replace(/^"|"$/g,''));
+    if(cols.length<4) continue;
+    const [actId, tipoZona, pNStr, pSStr]=cols;
+    const item=CAT_CW.find(c=>c.actividad_id===actId);
+    if(!item){errors++;continue;}
+    const pN=parseInt(pNStr)||0, pS=parseInt(pSStr)||0;
+    const esRural=(tipoZona||'').toUpperCase()==='RURAL';
+    if(esRural){item.precio_nokia_rural=pN;item.precio_subc_rural=pS;}
+    else       {item.precio_nokia_urbano=pN;item.precio_subc_urbano=pS;}
+    updated++;
+  }
+  renderCatalogoCW();
+  toast(`✓ CW: ${updated} precios actualizados. Errores: ${errors}. Guarda para confirmar.`);
 }
 
 async function guardarCatalogoCW(){
