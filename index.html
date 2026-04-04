@@ -28,16 +28,16 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:'Barlow',sans-serif;background:#f0f2f0;color:var(--k);font-size:13px}
 /* HEADER */
-.hdr{background:var(--k);display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:50px;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--g)}
+.hdr{background:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 18px;height:50px;position:sticky;top:0;z-index:200;border-bottom:3px solid var(--g);box-shadow:0 1px 4px rgba(0,0,0,.08)}
 .hdr-brand{display:flex;align-items:center;gap:9px}
 .logo{display:flex;align-items:center;flex-shrink:0}
-.bn{color:#fff;font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px}
-.bs{color:var(--gl);font-size:9px;letter-spacing:.5px}
-.htit{color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:2px;text-transform:uppercase;opacity:.85}
+.bn{color:var(--k);font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:16px;letter-spacing:1px}
+.bs{color:var(--go);font-size:9px;letter-spacing:.5px}
+.htit{color:var(--g4);font-family:'Barlow Condensed',sans-serif;font-weight:600;font-size:13px;letter-spacing:2px;text-transform:uppercase;opacity:.7}
 /* NAV */
-.nav{background:#111;display:flex;gap:1px;padding:0 18px;border-bottom:1px solid rgba(255,255,255,.06);overflow-x:auto;-webkit-overflow-scrolling:touch}
-.nt{background:none;border:none;color:var(--g3);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:8px 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
-.nt:hover{color:#fff}.nt.active{color:var(--gl);border-bottom-color:var(--gl)}
+.nav{background:#fff;display:flex;gap:1px;padding:0 18px;border-bottom:1.5px solid var(--g2);overflow-x:auto;-webkit-overflow-scrolling:touch}
+.nt{background:none;border:none;color:var(--g4);font-family:'Barlow',sans-serif;font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;padding:8px 12px;cursor:pointer;border-bottom:2px solid transparent;transition:all .15s;white-space:nowrap}
+.nt:hover{color:var(--k)}.nt.active{color:var(--go);border-bottom-color:var(--g)}
 /* USER BADGE */
 .user-badge{display:flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:700;cursor:pointer}
 .ub-admin{background:#fef9c3;color:#856404}.ub-op{background:var(--gf);color:var(--go)}.ub-viewer{background:#e0e7ff;color:#3730a3}.ub-coord{background:#ccfbf1;color:#065f46}
@@ -46,12 +46,15 @@ body{font-family:'Barlow',sans-serif;background:#f0f2f0;color:var(--k);font-size
 .screen{display:none}.screen.active{display:block}
 /* CARD */
 .card{background:#fff;border-radius:var(--rad);box-shadow:var(--sh);overflow:hidden;margin-bottom:14px}
-.card-h{background:var(--k);color:#fff;padding:9px 16px;display:flex;align-items:center;justify-content:space-between;border-left:4px solid var(--g)}
-.card-h h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase}
+.card-h{background:#fff;color:var(--k);padding:9px 16px;display:flex;align-items:center;justify-content:space-between;border-left:4px solid var(--g);border-bottom:1px solid var(--g2)}
+.card-h h2{font-family:'Barlow Condensed',sans-serif;font-weight:700;font-size:14px;letter-spacing:1px;text-transform:uppercase;color:var(--k)}
+th{background:#f0f7f0;color:var(--go);font-family:'Barlow',sans-serif;font-size:10px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:7px 10px;text-align:left;border-bottom:2px solid #c8e6c8;white-space:nowrap}
 .card-b{padding:16px}
 /* NOKIA / SUBC CARDS */
-.nokia-card .card-h{border-left-color:#CDFBF2;background:#144E4A}
-.subc-card .card-h{border-left-color:#FFC000;background:#FFF0CE;color:#000}
+.nokia-card .card-h{border-left-color:#CDFBF2;background:#144E4A;color:#fff;border-bottom-color:#0d3530}
+.nokia-card .card-h h2{color:#fff}
+.subc-card .card-h{border-left-color:#FFC000;background:#FFF0CE;color:#000;border-bottom-color:#f5d98a}
+.subc-card .card-h h2{color:#000}
 /* BTN */
 .btn{border:none;cursor:pointer;font-family:'Barlow',sans-serif;font-weight:600;font-size:11px;border-radius:20px;padding:7px 14px;transition:all .15s;display:inline-flex;align-items:center;gap:4px}
 .bp{background:var(--g);color:#fff}.bp:hover{background:var(--go)}
@@ -88,7 +91,7 @@ input[type=date].fc{min-width:0;width:100%;box-sizing:border-box;-webkit-appeara
 .bg-pu{background:#e9d8fd;color:#553c9a}
 /* TABLE */
 .tbl{width:100%;border-collapse:collapse;font-size:11px}
-.tbl th{background:var(--k);color:var(--gl);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.7px;text-transform:uppercase;font-size:9px;padding:7px 8px;text-align:left;white-space:nowrap}
+.tbl th{background:#f0f7f0;color:var(--go);font-family:'Barlow Condensed',sans-serif;font-weight:700;letter-spacing:.7px;text-transform:uppercase;font-size:9px;padding:7px 8px;text-align:left;white-space:nowrap;border-bottom:2px solid #c8e6c8}
 .tbl-nokia th{background:#91A8A7!important;color:#000000!important;font-size:11px!important;font-weight:800!important;padding:9px 10px!important;letter-spacing:.8px!important}
 .tbl-subc th{background:#FFD36C!important;color:#000000!important;font-size:11px!important;font-weight:800!important;padding:9px 10px!important;letter-spacing:.8px!important}
 .tbl-gastos th{background:#FFD36C!important;color:#000000!important;font-size:10px!important;font-weight:700!important;padding:7px 10px!important;letter-spacing:.8px!important}
@@ -260,11 +263,11 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 /* ═══ HAMBURGER MENU BUTTON ═══ */
 .hdr-menu-btn{
   display:none;background:none;border:none;cursor:pointer;
-  padding:8px 10px;border-radius:6px;color:#fff;line-height:1;
+  padding:8px 10px;border-radius:6px;color:var(--k);line-height:1;
   align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
   -webkit-tap-highlight-color:transparent;
 }
-.hdr-menu-btn:active{background:rgba(255,255,255,.12)}
+.hdr-menu-btn:active{background:rgba(0,0,0,.06)}
 /* ═══ NAV DRAWER ═══ */
 .nav-drawer-overlay{
   display:none;position:fixed;inset:0;
@@ -351,7 +354,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 <div class="hdr">
   <button class="hdr-menu-btn" onclick="openNavDrawer()" aria-label="Menú">☰</button>
   <div class="hdr-brand">
-    <img id="empresa-logo-login" src="" style="height:34px;width:auto;object-fit:contain;display:none" alt="Logo"><span id="empresa-nombre-login" style="font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px">EMPRESA</span>
+    <img id="empresa-logo-login" src="" style="height:34px;width:auto;object-fit:contain;display:none" alt="Logo"><span id="empresa-nombre-login" style="font-size:18px;font-weight:700;color:var(--k);letter-spacing:.5px">EMPRESA</span>
   </div>
   <div class="htit">Liquidador Nokia 2026</div>
   <div class="flex gap8" style="align-items:center">
@@ -1066,10 +1069,32 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     </div>
   </div>
 
+  <!-- USUARIOS Y ROLES -->
+  <div class="card" style="margin-top:16px">
+    <div class="card-h">
+      <h2>👥 Usuarios y Roles</h2>
+      <button class="btn btn-sm bk no-print" onclick="cargarRoles()">↻ Actualizar</button>
+    </div>
+    <div style="padding:0">
+      <table class="tbl" id="tbl-roles">
+        <thead>
+          <tr>
+            <th>Nombre</th>
+            <th>Rol</th>
+            <th style="font-size:8px;color:var(--g3)">User ID (Supabase)</th>
+          </tr>
+        </thead>
+        <tbody id="tbody-roles">
+          <tr><td colspan="3" style="padding:16px;text-align:center;color:var(--g3)">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
   <!-- HISTORIAL -->
   <div class="card" style="margin-top:16px">
-    <div class="card-h" style="background:#1e293b;border-left-color:#94a3b8">
-      <h2 style="color:#fff">📋 Historial de Cambios</h2>
+    <div class="card-h">
+      <h2>📋 Historial de Cambios</h2>
       <button class="btn btn-sm bk no-print" onclick="cargarHistorial()">↻ Actualizar</button>
     </div>
     <div style="padding:0;overflow-x:auto;max-height:400px;overflow-y:auto">
@@ -3518,7 +3543,40 @@ function renderConfigEmpresa(){
     if(/^#[0-9A-Fa-f]{6}$/.test(this.value))
       document.getElementById('cfg-color').value=this.value;
   };
-  if(ST.isAdmin) cargarHistorial();
+  if(ST.isAdmin){ cargarRoles(); cargarHistorial(); }
+}
+
+// ── Usuarios y roles ─────────────────────────────────────────
+async function cargarRoles(){
+  const tbody=document.getElementById('tbody-roles');
+  if(!tbody||!USE_SUPABASE||!ST.isAdmin) return;
+  const supa=getSupabase(); if(!supa) return;
+  tbody.innerHTML='<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--g3)">Cargando…</td></tr>';
+  const {data,error}=await supa.from('user_roles').select('user_id,role,nombre').order('role');
+  if(error||!data){
+    tbody.innerHTML='<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--r)">Error al cargar usuarios</td></tr>';
+    return;
+  }
+  if(!data.length){
+    tbody.innerHTML='<tr><td colspan="3" style="padding:16px;text-align:center;color:var(--g3)">Sin usuarios registrados</td></tr>';
+    return;
+  }
+  const rolCfg={
+    admin:   {cls:'ub-admin',  label:'⚙ admin',    tip:'Todo: configuración, catálogo, historial, eliminar sitios, reabrir liquidaciones'},
+    coord:   {cls:'ub-coord',  label:'🏢 coord',    tip:'Editar sitios, reabrir liquidaciones finales (TI y CW), agregar LC — sin acceso a precios ni Config'},
+    operador:{cls:'ub-op',     label:'👤 operador', tip:'Crear/editar sitios, liquidar, registrar gastos'},
+    viewer:  {cls:'ub-viewer', label:'👁 viewer',   tip:'Solo lectura'}
+  };
+  tbody.innerHTML=data.map((u,i)=>{
+    const r=rolCfg[u.role]||{cls:'ub-op',label:u.role,tip:''};
+    const uid=u.user_id?u.user_id.slice(0,8)+'…':'—';
+    const bg=i%2===0?'':'background:#f9f9f9';
+    return`<tr style="${bg}">
+      <td style="font-weight:600">${u.nombre||'—'}</td>
+      <td><span class="user-badge ${r.cls}" style="cursor:help" title="${r.tip}">${r.label}</span></td>
+      <td style="font-size:10px;color:var(--g3);font-family:monospace" title="${u.user_id||''}">${uid}</td>
+    </tr>`;
+  }).join('');
 }
 
 // ── Historial de cambios ──────────────────────────────────────
