@@ -152,40 +152,25 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
    ═══════════════════════════════════════════════════════════ */
 @media (max-width:768px){
 
-  /* ── Header ── */
-  .hdr{padding:0 10px;height:46px}
+  /* ── Header: safe area para notch/Dynamic Island ── */
+  .hdr{
+    padding:env(safe-area-inset-top) 10px 0;
+    height:calc(46px + env(safe-area-inset-top));
+    min-height:calc(46px + env(safe-area-inset-top));
+  }
   .htit{display:none}
   .hdr-brand img{height:28px!important}
   .user-badge{font-size:9px;padding:3px 7px}
   .hdr .flex.gap8{gap:4px}
   .hdr .btn-sm{padding:3px 7px;font-size:9px}
+  .hdr-menu-btn{display:flex!important}
 
-  /* ── Nav: bottom tab bar on mobile ── */
-  .nav{
-    position:fixed;bottom:0;left:0;right:0;top:auto;
-    background:#111;
-    padding:0;
-    border-top:2px solid var(--g);
-    border-bottom:none;
-    display:flex;justify-content:space-around;
-    z-index:190;
-    height:52px;
-    -webkit-overflow-scrolling:touch;
-    overflow-x:auto;
-    overscroll-behavior:none;
-  }
-  .nt{
-    flex:1;min-width:0;
-    font-size:8px;padding:4px 2px 6px;
-    border-bottom:none;border-top:2px solid transparent;
-    letter-spacing:0;
-    display:flex;flex-direction:column;align-items:center;gap:1px;
-  }
-  .nt.active{border-top-color:var(--gl);border-bottom:none;color:var(--gl)}
+  /* ── Nav: ocultar barra inferior — reemplazada por drawer ── */
+  .nav{display:none!important}
 
-  /* ── Main padding + bottom nav clearance ── */
-  .main{padding:10px 10px 70px;max-width:100%}
-  body{padding-bottom:52px}
+  /* ── Main padding — sin barra inferior ── */
+  .main{padding:10px 10px max(18px,env(safe-area-inset-bottom));max-width:100%}
+  body{padding-bottom:0}
 
   /* ── Stat cards: 2 cols on tablet, 1 on phone ── */
   .g4,.g5{grid-template-columns:1fr 1fr!important;gap:8px}
@@ -272,6 +257,59 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 }
 
 @media print{.hdr,.nav,.no-print{display:none!important}body{background:#fff}.main{padding:0;max-width:100%}}
+/* ═══ HAMBURGER MENU BUTTON ═══ */
+.hdr-menu-btn{
+  display:none;background:none;border:none;cursor:pointer;
+  padding:8px 10px;border-radius:6px;color:#fff;line-height:1;
+  align-items:center;justify-content:center;font-size:20px;flex-shrink:0;
+  -webkit-tap-highlight-color:transparent;
+}
+.hdr-menu-btn:active{background:rgba(255,255,255,.12)}
+/* ═══ NAV DRAWER ═══ */
+.nav-drawer-overlay{
+  display:none;position:fixed;inset:0;
+  background:rgba(0,0,0,.6);z-index:280;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-drawer-overlay.open{display:block}
+.nav-drawer{
+  position:fixed;top:0;left:0;bottom:0;width:270px;max-width:82vw;
+  background:#111;z-index:290;
+  transform:translateX(-100%);
+  transition:transform .25s cubic-bezier(.4,0,.2,1);
+  overflow-y:auto;-webkit-overflow-scrolling:touch;
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:max(20px,env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;
+}
+.nav-drawer.open{transform:translateX(0)}
+.nav-drawer-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 16px 12px;border-bottom:1px solid rgba(255,255,255,.08);
+  flex-shrink:0;
+}
+.nav-drawer-hdr span{
+  font-family:'Barlow Condensed',sans-serif;font-weight:700;
+  font-size:13px;letter-spacing:2px;text-transform:uppercase;color:var(--gl);
+}
+.nav-drawer-close{
+  background:none;border:none;color:rgba(255,255,255,.4);
+  font-size:22px;cursor:pointer;padding:2px 8px;line-height:1;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-drawer-item{
+  display:flex;align-items:center;gap:13px;
+  width:100%;background:none;border:none;border-left:3px solid transparent;
+  color:rgba(255,255,255,.72);
+  font-family:'Barlow',sans-serif;font-weight:600;font-size:14px;
+  padding:13px 18px;text-align:left;cursor:pointer;
+  transition:all .12s;min-height:48px;
+  -webkit-tap-highlight-color:transparent;
+}
+.nav-drawer-item:active{background:rgba(255,255,255,.07);color:#fff}
+.nav-drawer-item.active{color:var(--gl);border-left-color:var(--gl);background:rgba(39,199,39,.07)}
+.nav-drawer-item .ndi{font-size:16px;width:22px;text-align:center;flex-shrink:0}
+.nav-drawer-sep{height:1px;background:rgba(255,255,255,.07);margin:4px 16px;flex-shrink:0}
 /* PROFILE SETUP */
 .profile-card{background:#fff;border-radius:var(--rad);padding:24px;box-shadow:var(--shl);max-width:360px;margin:60px auto;text-align:center}
 .profile-card h2{font-family:'Barlow Condensed',sans-serif;font-size:22px;font-weight:700;margin-bottom:16px}
@@ -294,17 +332,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 <!-- LOGIN OVERLAY -->
 <div id="login-overlay" style="position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:500;display:flex;align-items:center;justify-content:center">
   <div class="profile-card" style="max-width:420px;width:90%">
-    <div style="width:90px;height:90px;border:3px solid var(--g);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px">
-      <svg width="52" height="52" viewBox="0 0 54 54" fill="none">
-        <circle cx="27" cy="11" r="5" stroke="#1a9c1a" stroke-width="2" fill="none"/>
-        <circle cx="11" cy="40" r="5" stroke="#1a9c1a" stroke-width="2" fill="none"/>
-        <circle cx="43" cy="40" r="5" stroke="#1a9c1a" stroke-width="2" fill="none"/>
-        <line x1="27" y1="16" x2="11" y2="35" stroke="#1a9c1a" stroke-width="1.8"/>
-        <line x1="27" y1="16" x2="43" y2="35" stroke="#1a9c1a" stroke-width="1.8"/>
-        <line x1="11" y1="40" x2="43" y2="40" stroke="#1a9c1a" stroke-width="1.8"/>
-      </svg>
-    </div>
-    <img id="empresa-logo-header" src="" style="height:50px;width:auto;object-fit:contain;margin-bottom:4px;display:none" alt="Logo"><span id="empresa-nombre-header" style="font-size:18px;font-weight:700;color:#CDFBF2;letter-spacing:1px">EMPRESA</span>
+    <img id="empresa-logo-header" src="" style="height:60px;width:auto;object-fit:contain;margin-bottom:8px;display:none" alt="Logo"><span id="empresa-nombre-header" style="display:block;font-size:20px;font-weight:700;color:#CDFBF2;letter-spacing:1px;margin-bottom:2px">EMPRESA</span>
     <div style="color:var(--g3);font-size:13px;margin-bottom:24px">Liquidador Nokia 2026</div>
     <div class="fg"><label class="fl">Email</label>
       <input type="email" class="fc" id="login-email" placeholder="usuario@ingetel.com"
@@ -321,8 +349,9 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
   </div>
 </div>
 <div class="hdr">
+  <button class="hdr-menu-btn" onclick="openNavDrawer()" aria-label="Menú">☰</button>
   <div class="hdr-brand">
-    <img id="empresa-logo-login" src="" style="height:38px;width:auto;object-fit:contain;display:none" alt="Logo"><span id="empresa-nombre-login" style="font-size:22px;font-weight:700;color:#144E4A">EMPRESA</span>
+    <img id="empresa-logo-login" src="" style="height:34px;width:auto;object-fit:contain;display:none" alt="Logo"><span id="empresa-nombre-login" style="font-size:18px;font-weight:700;color:#fff;letter-spacing:.5px">EMPRESA</span>
   </div>
   <div class="htit">Liquidador Nokia 2026</div>
   <div class="flex gap8" style="align-items:center">
@@ -342,6 +371,28 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
   <button class="nt" onclick="showScreen('analitica',this)">Analítica</button>
   <button class="nt" id="nav-catalogo" onclick="showScreen('catalogo',this)" style="display:none">Catálogo</button>
   <button class="nt" id="nav-config" onclick="showScreen('config',this)" style="display:none">⚙ Config</button>
+</div>
+
+<!-- NAV DRAWER (mobile) -->
+<div class="nav-drawer-overlay" id="nav-drawer-overlay" onclick="closeNavDrawer()"></div>
+<div class="nav-drawer" id="nav-drawer">
+  <div class="nav-drawer-hdr">
+    <span>Navegación</span>
+    <button class="nav-drawer-close" onclick="closeNavDrawer()">×</button>
+  </div>
+  <button class="nav-drawer-item active" id="ndi-dashboard" onclick="navTo('dashboard')"><span class="ndi">📊</span>Dashboard</button>
+  <button class="nav-drawer-item" id="ndi-sitios" onclick="navTo('sitios')"><span class="ndi">📡</span>TI — Sitios</button>
+  <button class="nav-drawer-item" id="ndi-sitios-tss" onclick="navTo('sitios-tss')"><span class="ndi">📡</span>TSS — Sitios</button>
+  <button class="nav-drawer-item" id="ndi-consolidado-cw" onclick="navTo('consolidado-cw')"><span class="ndi">🔧</span>CW — Obra Civil</button>
+  <div class="nav-drawer-sep"></div>
+  <button class="nav-drawer-item" id="ndi-liquidador" onclick="navTo('liquidador')"><span class="ndi">💰</span>Liquidador</button>
+  <button class="nav-drawer-item" id="ndi-gastos" onclick="navTo('gastos')"><span class="ndi">💳</span>Gastos</button>
+  <div class="nav-drawer-sep"></div>
+  <button class="nav-drawer-item" id="ndi-reportes" onclick="navTo('reportes')"><span class="ndi">📄</span>Reportes</button>
+  <button class="nav-drawer-item" id="ndi-analitica" onclick="navTo('analitica')"><span class="ndi">📈</span>Analítica</button>
+  <div class="nav-drawer-sep"></div>
+  <button class="nav-drawer-item" id="ndi-catalogo" style="display:none" onclick="navTo('catalogo')"><span class="ndi">📋</span>Catálogo</button>
+  <button class="nav-drawer-item" id="ndi-config" style="display:none" onclick="navTo('config')"><span class="ndi">⚙</span>Config</button>
 </div>
 
 <div class="main">
@@ -1315,6 +1366,29 @@ function confirmDialog(title,msg,onSi,onNo){
 function closeModal(id){document.getElementById(id).classList.remove('open')}
 document.querySelectorAll('.mo').forEach(m=>m.addEventListener('click',e=>{if(e.target===m)m.classList.remove('open')}));
 
+function openNavDrawer(){
+  document.getElementById('nav-drawer').classList.add('open');
+  document.getElementById('nav-drawer-overlay').classList.add('open');
+  document.body.style.overflow='hidden';
+}
+function closeNavDrawer(){
+  document.getElementById('nav-drawer').classList.remove('open');
+  document.getElementById('nav-drawer-overlay').classList.remove('open');
+  document.body.style.overflow='';
+}
+function navTo(name){
+  closeNavDrawer();
+  // Activar estado en drawer
+  document.querySelectorAll('.nav-drawer-item').forEach(i=>i.classList.remove('active'));
+  const di=document.getElementById('ndi-'+name);
+  if(di)di.classList.add('active');
+  // Delegar al botón del nav de escritorio si existe
+  const btn=[...document.querySelectorAll('.nt')].find(b=>
+    b.getAttribute('onclick')&&b.getAttribute('onclick').includes("'"+name+"'")
+  );
+  if(btn)btn.click();
+  else showScreen(name,null);
+}
 function showScreen(name,btn){
   document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('active'));
@@ -1322,6 +1396,10 @@ function showScreen(name,btn){
   if(!scr){console.warn('Screen not found:',name);return;}
   scr.classList.add('active');
   if(btn)btn.classList.add('active');
+  // Sincronizar estado activo en drawer
+  document.querySelectorAll('.nav-drawer-item').forEach(i=>i.classList.remove('active'));
+  const di=document.getElementById('ndi-'+name);
+  if(di)di.classList.add('active');
   if(name==='dashboard')renderDashboard();
   else if(name==='sitios')renderConsolidado();
   else if(name==='sitios-tss')renderConsolidadoTSS();
@@ -1368,6 +1446,11 @@ async function doLogin(){
     if(navCat) navCat.style.display=(ST.isAdmin||ST.isCoord)?'':'none';
     var navCfg=document.getElementById('nav-config');
     if(navCfg) navCfg.style.display=ST.isAdmin?'':'none';
+    // Sincronizar drawer mobile
+    var ndiCat=document.getElementById('ndi-catalogo');
+    if(ndiCat) ndiCat.style.display=(ST.isAdmin||ST.isCoord)?'':'none';
+    var ndiCfg=document.getElementById('ndi-config');
+    if(ndiCfg) ndiCfg.style.display=ST.isAdmin?'':'none';
     document.getElementById('login-overlay').style.display='none';
     const badge=document.getElementById('hdr-user-badge');
     const label=ST.isAdmin?'⚙ Admin':ST.isViewer?'👁 Viewer':ST.isCoord?'🏢 Coord':'👤 Operador';
@@ -1391,6 +1474,10 @@ async function doLogout(){
   if(navCat) navCat.style.display='none';
   var navCfg=document.getElementById('nav-config');
   if(navCfg) navCfg.style.display='none';
+  var ndiCat=document.getElementById('ndi-catalogo');
+  if(ndiCat) ndiCat.style.display='none';
+  var ndiCfg=document.getElementById('ndi-config');
+  if(ndiCfg) ndiCfg.style.display='none';
   document.body.classList.remove('viewer-mode');
   // Reset login form completely
   document.getElementById('login-overlay').style.display='flex';
