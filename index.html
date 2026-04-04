@@ -598,6 +598,9 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
         <option value="TI">TI (todas)</option>
       </select>
 
+      <select class="fc" id="rep-lc-filter" style="width:180px" onchange="renderReportes()">
+        <option value="">Todos los LC</option>
+      </select>
       <button class="btn bp btn-sm" onclick="exportarReporteExcel()">⬇ Excel</button>
       <button class="btn bk btn-sm" onclick="window.print()">🖨 PDF</button>
     </div>
@@ -3077,10 +3080,15 @@ function renderReportes(){
   const mesFiltro=fpGetMes('fp-rep');
   const isTodos=mesFiltro==='todos' || mesFiltro===null || mesFiltro===undefined;
   const filTCRep=(document.getElementById('rep-tipo-cuadrilla')?.value)||'todos';
+  const filLCRep=(document.getElementById('rep-lc-filter')?.value)||'';
+  // Poblar selector LC dinámicamente
+  const lcSelRep=document.getElementById('rep-lc-filter');
+  if(lcSelRep){const cur=lcSelRep.value;const lcs=[...new Set(ST.sitios.filter(s=>matchTipoCuadrilla(s,filTCRep)).map(s=>s.lc).filter(Boolean))].sort();lcSelRep.innerHTML='<option value="">Todos los LC</option>'+lcs.map(l=>`<option value="${l}" ${l===cur?'selected':''}>${l}</option>`).join('');if(cur)lcSelRep.value=cur;}
 
   const mesesData=Array.from({length:12},(_,m)=>{
     const sitiosMes=ST.sitios.filter(s=>{
       if(!matchTipoCuadrilla(s, filTCRep)) return false;
+      if(filLCRep&&s.lc!==filLCRep) return false;
       if(!s.fecha)return false;
       const d=new Date(s.fecha);
       if(year!==null&&d.getFullYear()!==year) return false;
