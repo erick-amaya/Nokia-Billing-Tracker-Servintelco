@@ -266,6 +266,13 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
   }
 }
 
+/* Landscape mobile: tabla scroll con altura adecuada */
+#dash-tbl-wrap{max-height:calc(100vh - 320px)}
+#cons-tbl-wrap{max-height:calc(100vh - 240px)}
+@media (max-height:500px){
+  #dash-tbl-wrap{max-height:calc(100vh - 105px)}
+  #cons-tbl-wrap{max-height:calc(100vh - 90px)}
+}
 @media print{.hdr,.nav,.no-print{display:none!important}body{background:#fff}.main{padding:0;max-width:100%}}
 /* ═══ HAMBURGER MENU BUTTON ═══ */
 .hdr-menu-btn{
@@ -451,7 +458,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
   <div style="display:grid;grid-template-columns:1fr 340px;gap:14px">
     <div class="card">
       <div class="card-h"><h2>Sitios del Proyecto</h2></div>
-      <div style="padding:0;overflow-x:auto;max-height:calc(100vh - 320px);overflow-y:auto">
+      <div id="dash-tbl-wrap" style="padding:0;overflow-x:auto;overflow-y:auto">
         <table class="tbl" id="tbl-dash">
           <thead style="position:sticky;top:0;z-index:2"><tr>
             <th>Sitio</th><th>LC</th><th>Liquidación</th><th>Ciudad</th>
@@ -496,7 +503,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     </div>
   </div>
   <div class="card">
-    <div style="padding:0;overflow-x:auto;max-height:calc(100vh - 240px);overflow-y:auto">
+    <div id="cons-tbl-wrap" style="padding:0;overflow-x:auto;overflow-y:auto">
       <table class="tbl" id="tbl-cons">
         <thead style="position:sticky;top:0;z-index:2">
           <tr>
@@ -733,7 +740,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     <div class="card-h"><h2>Lista de Subcontratistas</h2>
       <button class="btn bp btn-sm no-print" id="btn-add-subc" style="display:none" onclick="addSubcRow()">＋ Agregar</button>
     </div>
-    <div style="padding:0">
+    <div style="padding:0;overflow-x:auto;-webkit-overflow-scrolling:touch">
       <table class="tbl" id="tbl-subc">
         <thead><tr><th>LC / Nombre</th><th>Empresa</th><th>Categoría</th><th>Tipo Cuadrilla</th><th>Teléfono</th><th>Email</th><th id="th-subc-act"></th></tr></thead>
         <tbody id="tbody-subc"></tbody>
@@ -1823,7 +1830,7 @@ function buildActTable(sitio,c,modo){
         <td class="num">${cop(pShow)}</td>
         <td class="num fw7" id="${modo==='nokia'?`act-tot-${sitio.id}-${aIdx}`:`act-tots-${sitio.id}-${aIdx}`}">${cop(tShow)}</td>
         <td class="no-print">${locked?'':`
-          <button class="btn-edit" onclick="editAct('${sitio.id}',${aIdx})">✏</button>
+          <button class="btn-edit" onclick="editAct('${sitio.id}',${aIdx})">${IC_PEN}</button>
           ${_crDelBtn(sitio.id,aIdx,act,isNokia)}`
         }</td>
       </tr>`;
@@ -1981,7 +1988,7 @@ function renderLiqSitio(sitio){
     return`<tr><td><span class="badge bg-o" style="font-size:9px">${g.tipo}</span></td>
       <td style="font-size:10px">${g.desc}</td><td class="num">${cop(g.valor)}</td>
       <td style="white-space:nowrap">
-        <button class="btn-edit" onclick="editarGasto(${gi},'${sitio.id}')" title="Editar">✏</button>
+        <button class="btn-edit" onclick="editarGasto(${gi},'${sitio.id}')" title="Editar">${IC_PEN}</button>
         <button class="btn-del" onclick="eliminarGasto(${gi});cargarSitio('${sitio.id}')">✕</button>
       </td></tr>`;
   }).join(''):'<tr><td colspan="4" style="text-align:center;color:var(--g3);padding:10px;font-size:10px">Sin gastos</td></tr>';
@@ -2789,6 +2796,9 @@ function _handleRealtimeLiqCW(payload){
   try{localStorage.setItem('igt26_cw',JSON.stringify(ST.liquidaciones_cw));}catch(e){}
   renderConsolidadoCW();
 }
+
+// ── ICON HELPERS ───────────────────────────────────────────────
+const IC_PEN='<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="currentColor" style="vertical-align:middle;display:inline-block"><path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/></svg>';
 
 // ── EMPRESA CONFIG ─────────────────────────────────────────────
 let _empresaConfig = {
@@ -3799,7 +3809,7 @@ function renderCatalogo(){
     <td class="num" style="background:#fffbeb">${catInp('number',a.A?.[zi],`inp_${lista}_${a.id}_A`,`updCatPrice('${a.id}','${lista}','A',${zi},this.value)`)}</td>
     <td class="num" style="background:#fffbeb">${catInp('number',a.AA?.[zi],`inp_${lista}_${a.id}_AA`,`updCatPrice('${a.id}','${lista}','AA',${zi},this.value)`)}</td>
     <td class="num" style="background:#fffbeb">${catInp('number',a.AAA?.[zi],`inp_${lista}_${a.id}_AAA`,`updCatPrice('${a.id}','${lista}','AAA',${zi},this.value)`)}</td>
-    <td style="text-align:center">${isAdmin?`<button class="btn-edit-row" onclick="enableCatRowEdit(this,'${a.id}','${lista}')" title="Editar precios">✏</button>`:''}</td>
+    <td style="text-align:center">${isAdmin?`<button class="btn-edit-row" onclick="enableCatRowEdit(this,'${a.id}','${lista}')" title="Editar precios">${IC_PEN}</button>`:''}</td>
   </tr>`;
   document.getElementById('tbody-cat-base').innerHTML=CAT.BASE.map(a=>renderCatRow(a,'BASE')).join('');
   document.getElementById('tbody-cat-adj').innerHTML=CAT.ADJ.map(a=>renderCatRow(a,'ADJ')).join('');
@@ -3817,7 +3827,7 @@ function renderCatalogo(){
     </select></td>
     <td>${isAdmin?subcInp('tel',s.tel,i,`SUBCS[${i}].tel=this.value;upsertSubc(${i})`):`${s.tel||'—'}`}</td>
     <td>${isAdmin?subcInp('email',s.email,i,`SUBCS[${i}].email=this.value;upsertSubc(${i})`):`${s.email||'—'}`}</td>
-    <td style="text-align:center;white-space:nowrap">${isAdmin?`<button class="btn-edit-row" onclick="enableSubcEdit(this,${i})" title="Editar">✏</button> <button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
+    <td style="text-align:center;white-space:nowrap">${isAdmin?`<button class="btn-edit-row" onclick="enableSubcEdit(this,${i})" title="Editar">${IC_PEN}</button> <button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
   </tr>`).join('');
   renderCatalogoCW();
 }
@@ -4097,7 +4107,7 @@ function renderLiquidadorCWSitio(sitio,liq){
       }</td>
       <td class="num">${cop(item.precio_nokia)}</td>
       <td class="num fw7" id="cw-rn-${sitio.id}-${safeId}">${cop(totN)}</td>
-      <td class="no-print">${locked?'':`<button class="btn-edit" style="margin-right:3px" onclick="editCWItem('${sitio.id}','${item.actividad_id}')">✏</button><button class="btn-del" onclick="delCWItem('${sitio.id}','${item.actividad_id}')">✕</button>`}</td>
+      <td class="no-print">${locked?'':`<button class="btn-edit" style="margin-right:3px" onclick="editCWItem('${sitio.id}','${item.actividad_id}')">${IC_PEN}</button><button class="btn-del" onclick="delCWItem('${sitio.id}','${item.actividad_id}')">✕</button>`}</td>
     </tr>`;
   }).join('');
 
@@ -4365,7 +4375,7 @@ function renderCatalogoCW(){
       <td style="min-width:80px">${adm?cwInpTxt(c.unidad,`inp_cw_${ci}_und`,`updCatCWField('${aid}','unidad',this.value)`):`<span class="badge bg-k" style="font-size:8px">${c.unidad}</span>`}</td>
       <td class="num" style="background:#eff6ff">${cwInpNum(nVal,`inp_cw_${ci}_n`,`updCatCWPrice('${aid}','nokia',${esRural?1:0},this.value)`)}</td>
       <td class="num" style="background:#fffbeb">${cwInpNum(sVal,`inp_cw_${ci}_s`,`updCatCWPrice('${aid}','subc',${esRural?1:0},this.value)`)}</td>
-      <td style="text-align:center">${adm?`<button class="btn-edit-row" onclick="enableCatCWEdit(this,${ci})" title="Editar precios">✏</button>`:''}</td>
+      <td style="text-align:center">${adm?`<button class="btn-edit-row" onclick="enableCatCWEdit(this,${ci})" title="Editar precios">${IC_PEN}</button>`:''}</td>
     </tr>`;
   }).join('');
 }
