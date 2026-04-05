@@ -67,6 +67,11 @@ th{background:#f0f7f0;color:var(--go);font-family:'Barlow',sans-serif;font-size:
 .btn-sm{padding:4px 9px;font-size:10px}
 .btn-lg{padding:10px 20px;font-size:13px}
 .btn-del{background:#fde;color:var(--r);border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;font-weight:700}
+.btn-edit-row{background:none;border:1px solid var(--g2);border-radius:4px;cursor:pointer;color:var(--go);font-size:11px;padding:2px 7px;transition:all .15s;-webkit-tap-highlight-color:transparent}
+.btn-edit-row:hover{color:var(--b);border-color:var(--b)}
+.btn-edit-row.editing{color:#fff!important;background:var(--b)!important;border-color:var(--b)!important}
+.cat-inp:disabled,.cat-inp[disabled]{background:transparent!important;border-color:transparent!important;cursor:default;color:inherit;pointer-events:none}
+.cat-inp:not(:disabled){border:1px solid var(--b)!important;background:#fff!important;pointer-events:auto}
 .btn-edit{background:#e8f4fd;color:#0f4c75;border:none;border-radius:4px;padding:2px 7px;font-size:10px;cursor:pointer;margin-right:3px}
 .viewer-mode .no-print{display:none!important}
 .viewer-mode input.fc,.viewer-mode select.fc,.viewer-mode input.iq{pointer-events:none;opacity:.7}
@@ -759,6 +764,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
         <th>Unidad</th>
         <th class="num th-nokia" style="min-width:130px">P. Nokia</th>
         <th class="num th-subc" style="min-width:130px">P. SubC</th>
+        <th id="th-cw-act" style="width:40px"></th>
       </tr></thead>
       <tbody id="tbody-cat-cw">
         <tr><td colspan="5" style="padding:20px;text-align:center;color:var(--g3)">Cargando catálogo CW…</td></tr>
@@ -3783,36 +3789,61 @@ function renderCatalogo(){
   if(btnUp) btnUp.style.display=isAdmin?'':'none';
   var btnSave=document.getElementById('btn-cat-save');
   if(btnSave) btnSave.style.display=isAdmin?'':'none';
-  const editableNum=(val,cb)=>isAdmin
-    ?`<input type="number" style="width:110px;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;text-align:right" value="${val||0}" onchange="${cb}">`
+  const catInp=(type,val,id,onch,extraStyle='')=>isAdmin
+    ?`<input type="${type}" class="cat-inp" style="width:110px;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right;${extraStyle}" value="${val||0}" disabled id="${id}" onchange="${onch}">`
     :cop(val);
   const renderCatRow=(a,lista)=>`<tr>
     <td>${a.nombre}</td>
     <td><span class="badge bg-k">${a.unidad}</span></td>
-    <td class="num" style="background:#eff6ff">${editableNum(a.nokia[zi],`updCatPrice('${a.id}','${lista}','nokia',${zi},this.value)`)}</td>
-    <td class="num" style="background:#fffbeb">${editableNum(a.A?.[zi],`updCatPrice('${a.id}','${lista}','A',${zi},this.value)`)}</td>
-    <td class="num" style="background:#fffbeb">${editableNum(a.AA?.[zi],`updCatPrice('${a.id}','${lista}','AA',${zi},this.value)`)}</td>
-    <td class="num" style="background:#fffbeb">${editableNum(a.AAA?.[zi],`updCatPrice('${a.id}','${lista}','AAA',${zi},this.value)`)}</td>
-    <td></td>
+    <td class="num" style="background:#eff6ff">${catInp('number',a.nokia[zi],`inp_${lista}_${a.id}_nokia`,`updCatPrice('${a.id}','${lista}','nokia',${zi},this.value)`)}</td>
+    <td class="num" style="background:#fffbeb">${catInp('number',a.A?.[zi],`inp_${lista}_${a.id}_A`,`updCatPrice('${a.id}','${lista}','A',${zi},this.value)`)}</td>
+    <td class="num" style="background:#fffbeb">${catInp('number',a.AA?.[zi],`inp_${lista}_${a.id}_AA`,`updCatPrice('${a.id}','${lista}','AA',${zi},this.value)`)}</td>
+    <td class="num" style="background:#fffbeb">${catInp('number',a.AAA?.[zi],`inp_${lista}_${a.id}_AAA`,`updCatPrice('${a.id}','${lista}','AAA',${zi},this.value)`)}</td>
+    <td style="text-align:center">${isAdmin?`<button class="btn-edit-row" onclick="enableCatRowEdit(this,'${a.id}','${lista}')" title="Editar precios">✏</button>`:''}</td>
   </tr>`;
   document.getElementById('tbody-cat-base').innerHTML=CAT.BASE.map(a=>renderCatRow(a,'BASE')).join('');
   document.getElementById('tbody-cat-adj').innerHTML=CAT.ADJ.map(a=>renderCatRow(a,'ADJ')).join('');
   document.getElementById('tbody-cat-cr').innerHTML=CAT.CR.map(a=>renderCatRow(a,'CR')).join('');
+  const subcInp=(field,val,i,onch)=>`<input class="fc cat-inp" style="padding:2px 7px;font-size:11px;min-width:60px" value="${val||''}" disabled id="inp_subc_${i}_${field}" onchange="${onch}">`;
   document.getElementById('tbody-subc').innerHTML=SUBCS.map((s,i)=>`<tr>
-    <td>${isAdmin?`<input class="fc" style="padding:2px 7px;font-size:11px" value="${s.lc}" onchange="SUBCS[${i}].lc=this.value;refreshSelects();upsertSubc(${i})">`:`<strong>${s.lc}</strong>`}</td>
-    <td>${isAdmin?`<input class="fc" style="padding:2px 7px;font-size:11px" value="${s.empresa}" onchange="SUBCS[${i}].empresa=this.value;upsertSubc(${i})">`:`${s.empresa}`}</td>
-    <td>${isAdmin?`<select class="fc" style="padding:2px 7px;font-size:11px" onchange="SUBCS[${i}].cat=this.value;refreshSelects();upsertSubc(${i})">
+    <td>${isAdmin?subcInp('lc',s.lc,i,`SUBCS[${i}].lc=this.value;refreshSelects();upsertSubc(${i})`):`<strong>${s.lc}</strong>`}</td>
+    <td>${isAdmin?subcInp('empresa',s.empresa,i,`SUBCS[${i}].empresa=this.value;upsertSubc(${i})`):`${s.empresa}`}</td>
+    <td>${isAdmin?`<select class="fc cat-inp" style="padding:2px 7px;font-size:11px" disabled id="inp_subc_${i}_cat" onchange="SUBCS[${i}].cat=this.value;refreshSelects();upsertSubc(${i})">
       <option ${s.cat==='A'?'selected':''}>A</option><option ${s.cat==='AA'?'selected':''}>AA</option>
       <option ${s.cat==='AAA'?'selected':''}>AAA</option><option value="INGETEL" ${s.cat==='INGETEL'?'selected':''}>INGETEL</option>
     </select>`:`<span class="badge bg-gl">${s.cat}</span>`}</td>
-    <td><select class="fc" style="padding:2px 7px;font-size:11px" ${!isAdmin?'disabled':''} onchange="SUBCS[${i}].tipoCuadrilla=this.value;upsertSubc(${i})">
+    <td><select class="fc cat-inp" style="padding:2px 7px;font-size:11px" disabled id="inp_subc_${i}_tc" onchange="SUBCS[${i}].tipoCuadrilla=this.value;upsertSubc(${i})">
       ${TIPOS_CUADRILLA.map(tc=>`<option value="${tc}" ${(s.tipoCuadrilla||TIPOS_CUADRILLA[0])===tc?'selected':''}>${tc}</option>`).join('')}
     </select></td>
-    <td>${isAdmin?`<input class="fc" style="padding:2px 7px;font-size:11px" value="${s.tel}" onchange="SUBCS[${i}].tel=this.value;upsertSubc(${i})">`:`${s.tel||'—'}`}</td>
-    <td>${isAdmin?`<input class="fc" style="padding:2px 7px;font-size:11px" value="${s.email}" onchange="SUBCS[${i}].email=this.value;upsertSubc(${i})">`:`${s.email||'—'}`}</td>
-    <td>${isAdmin?`<button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
+    <td>${isAdmin?subcInp('tel',s.tel,i,`SUBCS[${i}].tel=this.value;upsertSubc(${i})`):`${s.tel||'—'}`}</td>
+    <td>${isAdmin?subcInp('email',s.email,i,`SUBCS[${i}].email=this.value;upsertSubc(${i})`):`${s.email||'—'}`}</td>
+    <td style="text-align:center;white-space:nowrap">${isAdmin?`<button class="btn-edit-row" onclick="enableSubcEdit(this,${i})" title="Editar">✏</button> <button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
   </tr>`).join('');
   renderCatalogoCW();
+}
+function enableCatRowEdit(btn,id,lista){
+  const cols=['nokia','A','AA','AAA'];
+  const first=document.getElementById(`inp_${lista}_${id}_nokia`);if(!first)return;
+  const toEdit=first.disabled;
+  cols.forEach(col=>{const el=document.getElementById(`inp_${lista}_${id}_${col}`);if(el)el.disabled=!toEdit;});
+  btn.classList.toggle('editing',toEdit);
+  if(toEdit)first.focus();
+}
+function enableSubcEdit(btn,i){
+  const cols=['lc','empresa','cat','tc','tel','email'];
+  const first=document.getElementById(`inp_subc_${i}_lc`);if(!first)return;
+  const toEdit=first.disabled;
+  cols.forEach(col=>{const el=document.getElementById(`inp_subc_${i}_${col}`);if(el)el.disabled=!toEdit;});
+  btn.classList.toggle('editing',toEdit);
+  if(toEdit)first.focus();
+}
+function enableCatCWEdit(btn,ci){
+  const cols=['id','nom','und','n','s'];
+  const first=document.getElementById(`inp_cw_${ci}_id`);if(!first)return;
+  const toEdit=first.disabled;
+  cols.forEach(col=>{const el=document.getElementById(`inp_cw_${ci}_${col}`);if(el)el.disabled=!toEdit;});
+  btn.classList.toggle('editing',toEdit);
+  if(toEdit)first.focus();
 }
 function updCatPrice(id,lista,col,zi,val){
   const lst=lista==='BASE'?CAT.BASE:lista==='ADJ'?CAT.ADJ:CAT.CR;
@@ -4316,30 +4347,27 @@ function renderCatalogoCW(){
     return;
   }
   const esRural=(document.getElementById('cat-cw-zona')?.value)==='RURAL';
-  const inpStyle='width:100%;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;box-sizing:border-box';
-  const inpNum='width:110px;border:1px solid var(--g2);border-radius:4px;padding:3px 6px;font-size:11px;text-align:right';
-  const editId=(c)=>ST.isAdmin
-    ?`<input type="text" style="${inpStyle};font-weight:700;color:var(--b)" value="${c.actividad_id}" onchange="updCatCWField('${c.actividad_id}','actividad_id',this.value)">`
-    :`<span style="font-weight:700;color:var(--b)">${c.actividad_id}</span>`;
-  const editNom=(c)=>ST.isAdmin
-    ?`<input type="text" style="${inpStyle}" value="${c.nombre}" onchange="updCatCWField('${c.actividad_id}','nombre',this.value)">`
-    :c.nombre;
-  const editUnd=(c)=>ST.isAdmin
-    ?`<input type="text" style="${inpStyle}" value="${c.unidad}" onchange="updCatCWField('${c.actividad_id}','unidad',this.value)">`
-    :`<span class="badge bg-k" style="font-size:8px">${c.unidad}</span>`;
-  const editN=(c)=>ST.isAdmin
-    ?`<input type="number" style="${inpNum}" value="${esRural?c.precio_nokia_rural:c.precio_nokia_urbano}" onchange="updCatCWPrice('${c.actividad_id}','nokia',${esRural?1:0},this.value)">`
-    :cop(esRural?c.precio_nokia_rural:c.precio_nokia_urbano);
-  const editS=(c)=>ST.isAdmin
-    ?`<input type="number" style="${inpNum}" value="${esRural?c.precio_subc_rural:c.precio_subc_urbano}" onchange="updCatCWPrice('${c.actividad_id}','subc',${esRural?1:0},this.value)">`
-    :cop(esRural?c.precio_subc_rural:c.precio_subc_urbano);
-  tbody.innerHTML=CAT_CW.map(c=>`<tr>
-    <td style="min-width:100px">${editId(c)}</td>
-    <td style="font-size:10px;min-width:200px">${editNom(c)}</td>
-    <td style="min-width:80px">${editUnd(c)}</td>
-    <td class="num" style="background:#eff6ff">${editN(c)}</td>
-    <td class="num" style="background:#fffbeb">${editS(c)}</td>
-  </tr>`).join('');
+  const adm=ST.isAdmin;
+  const thAct=document.getElementById('th-cw-act');if(thAct)thAct.textContent=adm?'':'';
+  const cwInpTxt=(val,id,onch,xStyle='')=>adm
+    ?`<input type="text" class="cat-inp" style="width:100%;border-radius:4px;padding:3px 6px;font-size:11px;box-sizing:border-box;${xStyle}" value="${val||''}" disabled id="${id}" onchange="${onch}">`
+    :val;
+  const cwInpNum=(val,id,onch)=>adm
+    ?`<input type="number" class="cat-inp" style="width:110px;border-radius:4px;padding:3px 6px;font-size:11px;text-align:right" value="${val||0}" disabled id="${id}" onchange="${onch}">`
+    :cop(val);
+  tbody.innerHTML=CAT_CW.map((c,ci)=>{
+    const aid=c.actividad_id;
+    const nVal=esRural?c.precio_nokia_rural:c.precio_nokia_urbano;
+    const sVal=esRural?c.precio_subc_rural:c.precio_subc_urbano;
+    return `<tr>
+      <td style="min-width:100px">${adm?cwInpTxt(aid,`inp_cw_${ci}_id`,`updCatCWField('${aid}','actividad_id',this.value)`,'font-weight:700;color:var(--b)'):`<span style="font-weight:700;color:var(--b)">${aid}</span>`}</td>
+      <td style="font-size:10px;min-width:200px">${cwInpTxt(c.nombre,`inp_cw_${ci}_nom`,`updCatCWField('${aid}','nombre',this.value)`)}</td>
+      <td style="min-width:80px">${adm?cwInpTxt(c.unidad,`inp_cw_${ci}_und`,`updCatCWField('${aid}','unidad',this.value)`):`<span class="badge bg-k" style="font-size:8px">${c.unidad}</span>`}</td>
+      <td class="num" style="background:#eff6ff">${cwInpNum(nVal,`inp_cw_${ci}_n`,`updCatCWPrice('${aid}','nokia',${esRural?1:0},this.value)`)}</td>
+      <td class="num" style="background:#fffbeb">${cwInpNum(sVal,`inp_cw_${ci}_s`,`updCatCWPrice('${aid}','subc',${esRural?1:0},this.value)`)}</td>
+      <td style="text-align:center">${adm?`<button class="btn-edit-row" onclick="enableCatCWEdit(this,${ci})" title="Editar precios">✏</button>`:''}</td>
+    </tr>`;
+  }).join('');
 }
 
 function updCatCWPrice(actId, campo, esRural, val){
