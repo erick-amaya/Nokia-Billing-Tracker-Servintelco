@@ -984,6 +984,7 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
     <div class="mb">
       <div class="fg">
         <label class="fl">Ítem / Actividad CW</label>
+        <input type="text" class="fc" id="ea-cw-search" placeholder="Buscar ítem…" oninput="filterCWAct(this.value)" style="font-size:11px;margin-bottom:5px" autocomplete="off">
         <select class="fc" id="ea-cw-act" style="font-size:11px"></select>
       </div>
       <div class="fg">
@@ -3792,10 +3793,12 @@ function renderCatalogo(){
     document.getElementById('cat-lock-badge').textContent=isAdmin?'🔓 Admin':'🔒 Lectura';
     document.getElementById('cat-lock-badge').className='badge '+(isAdmin?'bg-gl':'bg-r');
   }
-  ['th-cat-base-act','th-cat-adj-act','th-cat-cr-act','th-subc-act'].forEach(id=>{
+  ['th-cat-base-act','th-cat-adj-act','th-cat-cr-act'].forEach(id=>{
     const el=document.getElementById(id);if(el)el.textContent=isAdmin?'Acciones':'';
   });
-  // LC: agregar visible para admin y coord; eliminar solo para admin
+  const subcActTh=document.getElementById('th-subc-act');
+  if(subcActTh)subcActTh.textContent=(isAdmin||isCoord)?'Acciones':'';
+  // LC: agregar visible para admin y coord; editar/eliminar también para coord
   document.getElementById('btn-add-subc').style.display=(isAdmin||isCoord)?'':'none';
   ['btn-add-cat-base','btn-add-cat-adj','btn-add-cat-cr'].forEach(function(id){var el=document.getElementById(id);if(el)el.style.display=isAdmin?'':'none';});
   var btnUp=document.getElementById('btn-cat-upload');
@@ -3818,19 +3821,20 @@ function renderCatalogo(){
   document.getElementById('tbody-cat-adj').innerHTML=CAT.ADJ.map(a=>renderCatRow(a,'ADJ')).join('');
   document.getElementById('tbody-cat-cr').innerHTML=CAT.CR.map(a=>renderCatRow(a,'CR')).join('');
   const subcInp=(field,val,i,onch)=>`<input class="fc cat-inp" style="padding:2px 7px;font-size:11px;min-width:60px" value="${val||''}" disabled id="inp_subc_${i}_${field}" onchange="${onch}">`;
+  const canEditLC=isAdmin||isCoord;
   document.getElementById('tbody-subc').innerHTML=SUBCS.map((s,i)=>`<tr>
-    <td>${isAdmin?subcInp('lc',s.lc,i,`SUBCS[${i}].lc=this.value;refreshSelects();upsertSubc(${i})`):`<strong>${s.lc}</strong>`}</td>
-    <td>${isAdmin?subcInp('empresa',s.empresa,i,`SUBCS[${i}].empresa=this.value;upsertSubc(${i})`):`${s.empresa}`}</td>
-    <td>${isAdmin?`<select class="fc cat-inp" style="padding:2px 7px;font-size:11px" disabled id="inp_subc_${i}_cat" onchange="SUBCS[${i}].cat=this.value;refreshSelects();upsertSubc(${i})">
+    <td>${canEditLC?subcInp('lc',s.lc,i,`SUBCS[${i}].lc=this.value;refreshSelects();upsertSubc(${i})`):`<strong>${s.lc}</strong>`}</td>
+    <td>${canEditLC?subcInp('empresa',s.empresa,i,`SUBCS[${i}].empresa=this.value;upsertSubc(${i})`):`${s.empresa}`}</td>
+    <td>${canEditLC?`<select class="fc cat-inp" style="padding:2px 7px;font-size:11px" disabled id="inp_subc_${i}_cat" onchange="SUBCS[${i}].cat=this.value;refreshSelects();upsertSubc(${i})">
       <option ${s.cat==='A'?'selected':''}>A</option><option ${s.cat==='AA'?'selected':''}>AA</option>
       <option ${s.cat==='AAA'?'selected':''}>AAA</option><option value="INGETEL" ${s.cat==='INGETEL'?'selected':''}>INGETEL</option>
     </select>`:`<span class="badge bg-gl">${s.cat}</span>`}</td>
     <td><select class="fc cat-inp" style="padding:2px 7px;font-size:11px" disabled id="inp_subc_${i}_tc" onchange="SUBCS[${i}].tipoCuadrilla=this.value;upsertSubc(${i})">
       ${TIPOS_CUADRILLA.map(tc=>`<option value="${tc}" ${(s.tipoCuadrilla||TIPOS_CUADRILLA[0])===tc?'selected':''}>${tc}</option>`).join('')}
     </select></td>
-    <td>${isAdmin?subcInp('tel',s.tel,i,`SUBCS[${i}].tel=this.value;upsertSubc(${i})`):`${s.tel||'—'}`}</td>
-    <td>${isAdmin?subcInp('email',s.email,i,`SUBCS[${i}].email=this.value;upsertSubc(${i})`):`${s.email||'—'}`}</td>
-    <td style="text-align:center;white-space:nowrap">${isAdmin?`<button class="btn-edit-row" onclick="enableSubcEdit(this,${i})" title="Editar">${IC_PEN}</button> <button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
+    <td>${canEditLC?subcInp('tel',s.tel,i,`SUBCS[${i}].tel=this.value;upsertSubc(${i})`):`${s.tel||'—'}`}</td>
+    <td>${canEditLC?subcInp('email',s.email,i,`SUBCS[${i}].email=this.value;upsertSubc(${i})`):`${s.email||'—'}`}</td>
+    <td style="text-align:center;white-space:nowrap">${canEditLC?`<button class="btn-edit-row" onclick="enableSubcEdit(this,${i})" title="Editar">${IC_PEN}</button> <button class="btn-del" onclick="eliminarLC(${i})">✕</button>`:''}</td>
   </tr>`).join('');
   renderCatalogoCW();
 }
@@ -4323,11 +4327,19 @@ function editCWItem(sitioId,actId){
   _editCWSitioId=sitioId; _editCWActId=actId;
   const liq=getLiqCW(sitioId);if(!liq)return;
   const item=liq.items.find(i=>i.actividad_id===actId);if(!item)return;
+  const srch=document.getElementById('ea-cw-search');if(srch)srch.value='';
   document.getElementById('ea-cw-act').innerHTML=CAT_CW.map(c=>
     `<option value="${c.actividad_id}" ${c.actividad_id===actId?'selected':''}>${c.actividad_id} — ${c.nombre}</option>`
   ).join('');
   document.getElementById('ea-cw-cant').value=item.cant||0;
   openModal('m-edit-cw-item');
+}
+function filterCWAct(q){
+  const sel=document.getElementById('ea-cw-act');if(!sel)return;
+  const cur=sel.value;
+  const list=q?CAT_CW.filter(c=>(c.actividad_id+' '+c.nombre).toLowerCase().includes(q.toLowerCase())):CAT_CW;
+  sel.innerHTML=list.map(c=>`<option value="${c.actividad_id}" ${c.actividad_id===cur?'selected':''}>${c.actividad_id} — ${c.nombre}</option>`).join('');
+  if(!sel.value&&list.length)sel.value=list[0].actividad_id;
 }
 function confirmarEditCWItem(){
   const liq=getLiqCW(_editCWSitioId);if(!liq)return;
@@ -4488,7 +4500,7 @@ function renderConsolidadoCW(){
       ?'<span class="badge bg-g" style="font-size:8px">FINAL</span>'
       :'<span class="badge bg-o" style="font-size:8px">PRE</span>';
     return`<tr>
-      <td><strong>${liq.sitio_id}</strong></td>
+      <td><span class="stat-link" onclick="abrirLiquidadorCW('${liq.sitio_id}')" style="cursor:pointer;font-weight:700;color:var(--go)" title="Abrir liquidador CW">${liq.sitio_id}</span></td>
       <td style="font-size:10px">${liq.smp||'—'}</td>
       <td style="font-size:10px">${liq.region||'—'}</td>
       <td><span class="badge bg-b" style="font-size:8px">${liq.tipo_zona}</span></td>
@@ -4498,9 +4510,8 @@ function renderConsolidadoCW(){
       <td class="num" style="color:var(--o)">${cop(c.totSubc)}</td>
       <td class="num fw7 ${c.utilidad>=0?'tg':'tr'}">${cop(c.utilidad)}</td>
       <td class="num"><span class="badge ${mcls(c.margen)}">${pct(c.margen)}</span></td>
-      <td>
-        <button class="btn bou btn-sm" onclick="abrirLiquidadorCW('${liq.sitio_id}')">Abrir</button>
-        ${ST.isAdmin&&liq.estado!=='final'?`<button class="btn-del" onclick="deleteLiqCW('${liq.id}')">✕</button>`:''}
+      <td style="text-align:center">
+        ${(ST.isAdmin||ST.isCoord)&&liq.estado!=='final'?`<button class="btn-del" onclick="deleteLiqCW('${liq.id}')">✕</button>`:''}
       </td>
     </tr>`;
   }).join('');
