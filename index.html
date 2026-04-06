@@ -122,6 +122,18 @@ input[type=date].fc{min-width:0;width:100%;box-sizing:border-box;-webkit-appeara
 .mbar{height:7px;background:var(--g2);border-radius:4px;overflow:hidden;margin-top:4px}
 .mfill{height:100%;border-radius:4px;background:#1a7a1a;transition:width .4s}
 .mfill.warn{background:#FFC000}.mfill.dang{background:#c0392b}
+/* COMBOBOX BUSCABLE */
+.combo-wrap{position:relative}
+.combo-input{width:100%;border:1.5px solid var(--g2);border-radius:5px;padding:7px 9px;font-family:'Barlow',sans-serif;font-size:12px;outline:none;transition:border-color .15s}
+.combo-input:focus{border-color:var(--g)}
+.combo-drop{position:fixed;background:#fff;border:1.5px solid var(--g);border-top:none;border-radius:0 0 6px 6px;max-height:200px;overflow-y:auto;z-index:600;display:none;box-shadow:0 8px 24px rgba(0,0,0,.15)}
+.combo-drop.open{display:block}
+.combo-opt{padding:7px 10px;cursor:pointer;font-size:11px;border-bottom:1px solid var(--g1)}
+.combo-opt:hover,.combo-opt.focused{background:var(--gf)}
+.combo-opt:last-child{border-bottom:none}
+.combo-opt-name{font-weight:600;color:var(--k);display:block}
+.combo-opt-meta{font-size:9px;color:var(--g3)}
+.combo-empty{padding:12px;text-align:center;font-size:11px;color:var(--g3)}
 /* MODAL */
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:300;align-items:center;justify-content:center}
 .mo.open{display:flex}
@@ -949,15 +961,21 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 
 <!-- AGREGAR ÍTEM CW -->
 <div class="mo" id="m-add-cw-item">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:520px;overflow:visible">
     <div class="mh" style="background:#0f4c75;border-bottom-color:#48cae4">
       <h3 style="color:#fff">＋ Agregar Ítem CW</h3>
       <button class="mc" onclick="closeModal('m-add-cw-item')">×</button>
     </div>
-    <div class="mb">
+    <div class="mb" style="overflow:visible">
       <div class="fg">
         <label class="fl">Ítem / Actividad CW</label>
-        <select class="fc" id="cw-add-act" style="font-size:11px"></select>
+        <div class="combo-wrap">
+          <input type="text" class="combo-input" id="cw-add-search"
+            placeholder="Escribe ID o nombre del ítem…"
+            oninput="filterCWAddCombo()" onfocus="openCWAddCombo()" autocomplete="off">
+          <div class="combo-drop" id="cw-add-drop"></div>
+        </div>
+        <input type="hidden" id="cw-add-act" value="">
       </div>
       <div class="fg" id="cw-add-preview" style="background:#f0f9ff;border-radius:6px;padding:10px;font-size:11px;display:none">
         <div id="cw-add-preview-txt"></div>
@@ -976,16 +994,21 @@ hr.div{border:none;border-top:1px solid var(--g2);margin:10px 0}
 
 <!-- EDITAR ÍTEM CW -->
 <div class="mo" id="m-edit-cw-item">
-  <div class="modal" style="max-width:520px">
+  <div class="modal" style="max-width:520px;overflow:visible">
     <div class="mh" style="background:#0f4c75;border-bottom-color:#48cae4">
       <h3 style="color:#fff">✏ Editar Ítem CW</h3>
       <button class="mc" onclick="closeModal('m-edit-cw-item')">×</button>
     </div>
-    <div class="mb">
+    <div class="mb" style="overflow:visible">
       <div class="fg">
         <label class="fl">Ítem / Actividad CW</label>
-        <input type="text" class="fc" id="ea-cw-search" placeholder="Buscar ítem…" oninput="filterCWAct(this.value)" style="font-size:11px;margin-bottom:5px" autocomplete="off">
-        <select class="fc" id="ea-cw-act" style="font-size:11px"></select>
+        <div class="combo-wrap">
+          <input type="text" class="combo-input" id="ea-cw-search"
+            placeholder="Escribe ID o nombre del ítem…"
+            oninput="filterCWActCombo()" onfocus="openCWActCombo()" autocomplete="off">
+          <div class="combo-drop" id="ea-cw-drop"></div>
+        </div>
+        <input type="hidden" id="ea-cw-act" value="">
       </div>
       <div class="fg">
         <label class="fl">Cantidad</label>
@@ -4262,26 +4285,18 @@ function openAddCWItem(sitioId){
   const liq=getLiqCW(sitioId);if(!liq)return;
   _cwAddSitioId=sitioId;
   if(!CAT_CW.length){toast('Catálogo CW no cargado — recarga la app','err');return;}
-  const esRural=liq.tipo_zona==='RURAL';
-  const usados=new Set((liq.items||[]).map(i=>i.actividad_id));
-  const opts=CAT_CW
-    .filter(c=>!usados.has(c.actividad_id))
-    .map(c=>{
-      const pN=esRural?c.precio_nokia_rural:c.precio_nokia_urbano;
-      return`<option value="${c.actividad_id}">${c.actividad_id} — ${c.nombre.substring(0,60)}${c.nombre.length>60?'…':''} (${cop(pN)})</option>`;
-    }).join('');
-  document.getElementById('cw-add-act').innerHTML=
-    opts||'<option value="">Sin ítems disponibles</option>';
+  _cwAddUsados=new Set((liq.items||[]).map(i=>i.actividad_id));
+  document.getElementById('cw-add-search').value='';
+  document.getElementById('cw-add-act').value='';
+  document.getElementById('cw-add-drop').classList.remove('open');
   document.getElementById('cw-add-cant').value='1';
   document.getElementById('cw-add-preview').style.display='none';
-  document.getElementById('cw-add-act').onchange=_previewCWItem;
   openModal('m-add-cw-item');
-  _previewCWItem();
 }
 
 function _previewCWItem(){
   const liq=getLiqCW(_cwAddSitioId);if(!liq)return;
-  const actId=document.getElementById('cw-add-act').value;
+  const actId=document.getElementById('cw-add-act').value;if(!actId)return;
   const cat=CAT_CW.find(c=>c.actividad_id===actId);
   const prev=document.getElementById('cw-add-preview');
   if(!cat){prev.style.display='none';return;}
@@ -4322,24 +4337,88 @@ function delCWItem(sitioId,actId){
   const sitio=ST.sitios.find(s=>s.id===sitioId);
   if(sitio)renderLiquidadorCWSitio(sitio,liq);
 }
+// ── CW COMBOBOX HELPERS ──────────────────────────────────────
+function _positionCWDrop(inpId,dropId){
+  const inp=document.getElementById(inpId);
+  const drop=document.getElementById(dropId);
+  if(!inp||!drop)return;
+  const r=inp.getBoundingClientRect();
+  drop.style.left=r.left+'px';
+  drop.style.top=r.bottom+'px';
+  drop.style.width=r.width+'px';
+}
+function _renderCWComboOpts(dropId,list,q,onSelect){
+  const drop=document.getElementById(dropId);if(!drop)return;
+  if(!list.length){
+    drop.innerHTML=`<div class="combo-empty">${q?'Sin resultados para "'+q+'"':'Catálogo CW vacío'}</div>`;
+  } else {
+    const esc=s=>s.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+    const hi=txt=>q?txt.replace(new RegExp('('+esc(q)+')','gi'),'<strong style="color:var(--g)">$1</strong>'):txt;
+    drop.innerHTML=list.slice(0,60).map(c=>`
+      <div class="combo-opt" onmousedown="${onSelect}('${c.actividad_id}',event)">
+        <span class="combo-opt-name">${hi(c.actividad_id)} — ${hi(c.nombre)}</span>
+        <span class="combo-opt-meta">${c.unidad}</span>
+      </div>`).join('');
+  }
+  drop.classList.add('open');
+}
+// ── EDITAR ítem CW ──────────────────────────────────────────
 let _editCWSitioId=null, _editCWActId=null;
 function editCWItem(sitioId,actId){
   _editCWSitioId=sitioId; _editCWActId=actId;
   const liq=getLiqCW(sitioId);if(!liq)return;
   const item=liq.items.find(i=>i.actividad_id===actId);if(!item)return;
-  const srch=document.getElementById('ea-cw-search');if(srch)srch.value='';
-  document.getElementById('ea-cw-act').innerHTML=CAT_CW.map(c=>
-    `<option value="${c.actividad_id}" ${c.actividad_id===actId?'selected':''}>${c.actividad_id} — ${c.nombre}</option>`
-  ).join('');
+  const cur=CAT_CW.find(c=>c.actividad_id===actId);
+  document.getElementById('ea-cw-search').value=cur?`${cur.actividad_id} — ${cur.nombre}`:'';
+  document.getElementById('ea-cw-act').value=actId;
+  document.getElementById('ea-cw-drop').classList.remove('open');
   document.getElementById('ea-cw-cant').value=item.cant||0;
   openModal('m-edit-cw-item');
 }
-function filterCWAct(q){
-  const sel=document.getElementById('ea-cw-act');if(!sel)return;
-  const cur=sel.value;
-  const list=q?CAT_CW.filter(c=>(c.actividad_id+' '+c.nombre).toLowerCase().includes(q.toLowerCase())):CAT_CW;
-  sel.innerHTML=list.map(c=>`<option value="${c.actividad_id}" ${c.actividad_id===cur?'selected':''}>${c.actividad_id} — ${c.nombre}</option>`).join('');
-  if(!sel.value&&list.length)sel.value=list[0].actividad_id;
+function filterCWActCombo(){
+  const q=document.getElementById('ea-cw-search').value.toLowerCase().trim();
+  _positionCWDrop('ea-cw-search','ea-cw-drop');
+  _renderCWComboOpts('ea-cw-drop',
+    q?CAT_CW.filter(c=>(c.actividad_id+' '+c.nombre).toLowerCase().includes(q)):CAT_CW,
+    q,'selectCWActCombo');
+}
+function openCWActCombo(){
+  const q=document.getElementById('ea-cw-search').value.toLowerCase().trim();
+  _positionCWDrop('ea-cw-search','ea-cw-drop');
+  _renderCWComboOpts('ea-cw-drop',
+    q?CAT_CW.filter(c=>(c.actividad_id+' '+c.nombre).toLowerCase().includes(q)):CAT_CW,
+    q,'selectCWActCombo');
+}
+function selectCWActCombo(actId,e){
+  e&&e.preventDefault&&e.preventDefault();
+  const cat=CAT_CW.find(c=>c.actividad_id===actId);if(!cat)return;
+  document.getElementById('ea-cw-search').value=`${cat.actividad_id} — ${cat.nombre}`;
+  document.getElementById('ea-cw-act').value=cat.actividad_id;
+  document.getElementById('ea-cw-drop').classList.remove('open');
+}
+// ── AGREGAR ítem CW ──────────────────────────────────────────
+let _cwAddUsados=new Set();
+function filterCWAddCombo(){
+  const q=document.getElementById('cw-add-search').value.toLowerCase().trim();
+  _positionCWDrop('cw-add-search','cw-add-drop');
+  _renderCWComboOpts('cw-add-drop',
+    CAT_CW.filter(c=>!_cwAddUsados.has(c.actividad_id)&&(!q||(c.actividad_id+' '+c.nombre).toLowerCase().includes(q))),
+    q,'selectCWAddCombo');
+}
+function openCWAddCombo(){
+  const q=document.getElementById('cw-add-search').value.toLowerCase().trim();
+  _positionCWDrop('cw-add-search','cw-add-drop');
+  _renderCWComboOpts('cw-add-drop',
+    CAT_CW.filter(c=>!_cwAddUsados.has(c.actividad_id)&&(!q||(c.actividad_id+' '+c.nombre).toLowerCase().includes(q))),
+    q,'selectCWAddCombo');
+}
+function selectCWAddCombo(actId,e){
+  e&&e.preventDefault&&e.preventDefault();
+  const cat=CAT_CW.find(c=>c.actividad_id===actId);if(!cat)return;
+  document.getElementById('cw-add-search').value=`${cat.actividad_id} — ${cat.nombre}`;
+  document.getElementById('cw-add-act').value=cat.actividad_id;
+  document.getElementById('cw-add-drop').classList.remove('open');
+  _previewCWItem();
 }
 function confirmarEditCWItem(){
   const liq=getLiqCW(_editCWSitioId);if(!liq)return;
@@ -4939,6 +5018,13 @@ window.addEventListener('resize',fixScrollHeights);
 window.addEventListener('orientationchange',()=>setTimeout(fixScrollHeights,300));
 fixScrollHeights();
 
+document.addEventListener('click',function(e){
+  [['ea-cw-search','ea-cw-drop'],['cw-add-search','cw-add-drop']].forEach(([inpId,dropId])=>{
+    const inp=document.getElementById(inpId);
+    const drop=document.getElementById(dropId);
+    if(inp&&drop&&!inp.contains(e.target))drop.classList.remove('open');
+  });
+});
 syncInit().then(()=>init());
 </script>
 </body>
